@@ -10,4 +10,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @EntityGraph(attributePaths = "category")
     List<Book> findAllByOrderByBookIdDesc();
+
+    @EntityGraph(attributePaths = "category")
+    List<Book> findByTitleContainingOrderByBookIdDesc(String keyword);
+
+    boolean existsByTitle(String title);
 }

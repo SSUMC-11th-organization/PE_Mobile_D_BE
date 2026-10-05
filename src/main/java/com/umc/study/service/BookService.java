@@ -4,8 +4,10 @@ import com.umc.study.dto.BookResponse;
 import com.umc.study.dto.CreateBookRequest;
 import com.umc.study.entity.Book;
 import com.umc.study.entity.Category;
+import com.umc.study.exception.DuplicateBookException;
 import com.umc.study.repository.BookRepository;
 import com.umc.study.repository.CategoryRepository;
+import jakarta.websocket.DecodeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +29,23 @@ public class BookService {
 
     @Transactional
     public BookResponse createBook(CreateBookRequest request) {
+        if (bookRepository.existsByTitle(request.title())) {
+            throw new DuplicateBookException("이미 등록된 도서 입니다.");
+        }
+
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
         Book book = new Book(category, request.title(), request.description());
         return BookResponse.from(bookRepository.save(book));
     }
+
+
+    @Transactional(readOnly = true)
+    public List<BookResponse> searchBooks(String keyword) {
+        return bookRepository.findByTitleContainingOrderByBookIdDesc(keyword).stream()
+                .map(BookResponse::from)
+                .toList();
+    }
+
 }

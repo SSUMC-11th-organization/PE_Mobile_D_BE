@@ -15,4 +15,10 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleIllegalArgument(IllegalArgumentException e) {
         return Map.of("message", e.getMessage());
     }
+
+    @ExceptionHandler(DuplicateBookException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleDuplicateBook(DuplicateBookException e) {
+        return Map.of("message", e.getMessage());
+    }
 }
