@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Table(
@@ -33,4 +34,17 @@ public class Rating extends BaseTimeEntity {
 
     @Column(columnDefinition = "TEXT")
     private String comment;
+
+    @Builder
+    public Rating(Member member, Long movieId, Integer score, String comment) {
+        this.member = member;
+        this.movieId = movieId;
+        this.score = score;
+        this.comment = comment;
+    }
+
+    public void update(Integer score, String comment) {
+        this.score = score;
+        this.comment = comment;
+    }
 }
