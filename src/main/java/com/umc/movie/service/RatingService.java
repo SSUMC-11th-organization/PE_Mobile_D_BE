@@ -5,13 +5,13 @@ import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
 import com.umc.movie.entity.Member;
 import com.umc.movie.entity.Rating;
+import com.umc.movie.exception.ApiException;
 import com.umc.movie.repository.MemberRepository;
 import com.umc.movie.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,9 +26,10 @@ public class RatingService {
     public List<RatingResponse> getRatingsByMember(Long memberId) {
 
         if (!memberRepository.existsById(memberId)) {
-            throw new ResponseStatusException(
+            throw new ApiException(
                     HttpStatus.NOT_FOUND,
-                    "존재하지 않는 유저입니다."
+                    "MEMBER404_1",
+                    "해당 회원을 찾을 수 없습니다."
             );
         }
 
@@ -41,16 +42,23 @@ public class RatingService {
 
     @Transactional
     public Long create(Long memberId, CreateRatingRequest request) {
+
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(
+                .orElseThrow(() -> new ApiException(
                         HttpStatus.NOT_FOUND,
-                        "존재하지 않는 유저입니다."
+                        "MEMBER404_1",
+                        "해당 회원을 찾을 수 없습니다."
                 ));
 
-        // rating 테이블에는 (member_id, movie_id) 복합 UNIQUE 제약이 걸려 있습니다.
-        // 그냥 저장해도 DB가 막아주지만, 우리가 정한 메시지로 응답하기 위해 먼저 확인합니다.
-        if (ratingRepository.existsByMember_MemberIdAndMovieId(memberId, request.movieId())) {
-            throw new IllegalArgumentException("이미 이 영화에 평점을 남기셨습니다.");
+        if (ratingRepository.existsByMember_MemberIdAndMovieId(
+                memberId,
+                request.movieId()
+        )) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "RATING409_1",
+                    "이미 이 영화에 평점을 남기셨습니다."
+            );
         }
 
         Rating rating = Rating.builder()
@@ -64,11 +72,17 @@ public class RatingService {
     }
 
     @Transactional
-    public void update(Long ratingId, Long memberId, UpdateRatingRequest request) {
+    public void update(
+            Long ratingId,
+            Long memberId,
+            UpdateRatingRequest request
+    ) {
         Rating rating = findOwnedRating(ratingId, memberId);
 
-        rating.update(request.score(), request.comment());
-        ratingRepository.save(rating);
+        rating.update(
+                request.score(),
+                request.comment()
+        );
     }
 
     @Transactional
@@ -79,15 +93,18 @@ public class RatingService {
     }
 
     private Rating findOwnedRating(Long ratingId, Long memberId) {
+
         Rating rating = ratingRepository.findById(ratingId)
-                .orElseThrow(() -> new ResponseStatusException(
+                .orElseThrow(() -> new ApiException(
                         HttpStatus.NOT_FOUND,
-                        "존재하지 않는 평점입니다."
+                        "RATING404_1",
+                        "해당 평점을 찾을 수 없습니다."
                 ));
 
         if (!rating.getMember().getMemberId().equals(memberId)) {
-            throw new ResponseStatusException(
+            throw new ApiException(
                     HttpStatus.FORBIDDEN,
+                    "RATING403_1",
                     "본인이 작성한 평점만 수정하거나 삭제할 수 있습니다."
             );
         }
