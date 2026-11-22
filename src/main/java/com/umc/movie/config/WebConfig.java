@@ -35,6 +35,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/members/nickname/**",  // 닉네임 중복 체크
                         "/members/email/**",     // 이메일 중복 체크
                         "/members/*/ratings",    // 유저별 평점 조회 (누구나 볼 수 있는 목록)
+                        "/health",               // ALB 헬스 체크 (인프라 1주차)
+                        "/metrics",              // Alloy 지표 수집 (인프라 2주차)
                         "/error"                 // 스프링이 내부적으로 쓰는 경로
                 );
     }
