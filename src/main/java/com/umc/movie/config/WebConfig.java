@@ -31,6 +31,11 @@ public class WebConfig implements WebMvcConfigurer {
                         "/favorites",
                         "/favorites/**",
                         "/movie-records"
+                )
+                .excludePathPatterns(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
                 );
     }
 }
