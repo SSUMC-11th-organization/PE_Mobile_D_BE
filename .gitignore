@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Infra (AWS 계정/리소스 식별자 포함 — 커밋 금지) ###
+infra/vars.sh
+infra/lt.json
+infra/ssm-params.json
