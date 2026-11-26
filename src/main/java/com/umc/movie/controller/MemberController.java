@@ -20,10 +20,16 @@ import com.umc.movie.interceptor.AuthInterceptor;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import com.umc.movie.dto.UpdateNicknameRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.umc.movie.config.SwaggerConfig;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/members")
+@Tag(name = "회원", description = "회원가입과 내 정보 API")
 public class MemberController {
     private final MemberService memberService;
 
@@ -37,6 +43,11 @@ public class MemberController {
         return memberService.checkEmail(email);
     }
 
+    @Operation(
+            summary = "회원가입",
+            description = "이메일, 비밀번호, 닉네임으로 회원을 등록합니다. 토큰이 없어도 호출할 수 있는 공개 API입니다."
+    )
+
     @PostMapping
     public ResponseEntity<ApiResponse<MemberResponse>> signUp(
             @Valid @RequestBody SignUpRequest request
@@ -45,6 +56,26 @@ public class MemberController {
         return ResponseEntity.status(201)
                 .body(ApiResponse.created("회원가입에 성공했습니다.", response));
     }
+
+    @Operation(
+            summary = "내 정보 조회",
+            description = "로그인한 회원의 정보를 조회합니다."
+    )
+    @SecurityRequirement(name = SwaggerConfig.BEARER_AUTH)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "내 정보 조회 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "AUTH401_2 - 로그인이 필요한 요청"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "MEMBER404_1 - 해당 회원을 찾을 수 없음"
+            )
+    })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -58,6 +89,30 @@ public class MemberController {
                 )
         );
     }
+
+    @Operation(
+            summary = "내 정보 수정",
+            description = "로그인한 회원의 닉네임을 수정합니다."
+    )
+    @SecurityRequirement(name = SwaggerConfig.BEARER_AUTH)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "내 정보 수정 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "COMMON4001 - 요청 값 검증 실패"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "AUTH401_2 - 로그인이 필요한 요청"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "MEMBER404_1 - 해당 회원을 찾을 수 없음"
+            )
+    })
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyNickname(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
